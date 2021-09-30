@@ -102,6 +102,30 @@ fn gender() {
 }
 
 #[test]
+fn can_breed() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(KittiesModule::create(Origin::signed(100)));
+
+        System::set_extrinsic_index(1);
+
+        assert_ok!(KittiesModule::create(Origin::signed(100)));
+
+        assert_noop!(KittiesModule::breed(Origin::signed(100), 0, 11), Error::<Test>::InvalidKittyId);
+        assert_noop!(KittiesModule::breed(Origin::signed(100), 0, 0), Error::<Test>::SameGender);
+        assert_noop!(KittiesModule::breed(Origin::signed(101), 0, 1), Error::<Test>::InvalidKittyId);
+
+        assert_ok!(KittiesModule::breed(Origin::signed(100), 0, 1));
+
+        let kitty = Kitty([59, 254, 219, 122, 245, 239, 191, 125, 255, 239, 247, 247, 251, 239, 247, 254]);
+
+        assert_eq!(KittiesModule::kitties(100, 2), Some(kitty.clone()));
+        assert_eq!(KittiesModule::next_kitty_id(), 3);
+
+        assert_eq!(last_event(), Event::kitties(RawEvent::KittyBred(100, 2, kitty)));
+    });
+}
+
+#[test]
 fn combine_dna_works() {
 	assert_eq!(combine_dna(0b11111111, 0b00000000, 0b00001111), 0b11110000);
 	assert_eq!(combine_dna(0b10101010, 0b11110000, 0b11001100), 0b11100010);

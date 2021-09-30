@@ -98,6 +98,35 @@ decl_module! {
 				Ok(())
 			})?;
 		}
+
+		/// Breed kitties
+		#[weight = 1000]
+		pub fn breed(origin, kitty_id_1: u32, kitty_id_2: u32) {
+			let sender = ensure_signed(origin)?;
+			let kitty1 = Self::kitties(&sender, kitty_id_1).ok_or(Error::<T>::InvalidKittyId)?;
+			let kitty2 = Self::kitties(&sender, kitty_id_2).ok_or(Error::<T>::InvalidKittyId)?;
+
+			ensure!(kitty1.gender() != kitty2.gender(), Error::<T>::SameGender);
+			 
+			let kitty_id = Self::get_next_kitty_id()?;
+
+			let kitty1_dna = kitty1.0;
+			let kitty2_dna = kitty2.0;
+
+			let selector = Self::random_value(&sender);
+			let mut new_dna = [0u8; 16];
+
+			// Combine parents and selector to create new kitty
+			for i in 0..kitty1_dna.len() {
+				new_dna[i] = combine_dna(kitty1_dna[i], kitty2_dna[i], selector[i]);
+			}
+
+			let new_kitty = Kitty(new_dna);
+
+			Kitties::<T>::insert(&sender, kitty_id, &new_kitty);
+
+			Self::deposit_event(RawEvent::KittyBred(sender, kitty_id, new_kitty));
+		}
 	}
 }
 
@@ -111,4 +140,19 @@ pub fn combine_dna(dna1: u8, dna2: u8, selector: u8) -> u8 {
 	// dna2		= 0b00001111
 	// result	= 0b10101011
 	0
+}
+
+impl<T: Trait> Module<T> {
+	fn get_next_kitty_id() -> sp_std::result::Result<u32, DispatchError> {
+		NextKittyId::try_mutate(|next_id| -> sp_std::result::Result<u32, DispatchError> {
+			let current_id = *next_id;
+			*next_id = next_id.checked_add(1).ok_or(Error::<T>::KittiesIdOverflow)?;
+			Ok(current_id)
+		})
+	}
+
+	fn random_value(sender: &T::AccountId) -> [u8; 16] {
+		// TODO: finish this implementation
+		Default::default()
+	}
 }
