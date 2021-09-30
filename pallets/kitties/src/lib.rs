@@ -2,8 +2,8 @@
 
 use codec::{Encode, Decode};
 use frame_support::{
-	decl_module, decl_storage, decl_event, decl_error, ensure, StorageValue, StorageDoubleMap,
-	traits::Randomness, RuntimeDebug, dispatch::{DispatchResult, DispatchError},
+	decl_module, decl_storage, decl_event, decl_error, StorageValue, StorageDoubleMap,
+	traits::Randomness, RuntimeDebug, dispatch::{DispatchResult },
 };
 use sp_io::hashing::blake2_128;
 use frame_system::ensure_signed;
@@ -73,10 +73,6 @@ decl_module! {
 		pub fn create(origin) {
 			let sender = ensure_signed(origin)?;
 
-			// TODO: refactor this method to use 
-			// `Self::random_value` and `Self::get_next_kitty_id`
-			// to simplify the implementation
-
 			NextKittyId::try_mutate(|next_id| -> DispatchResult {
 				let current_id = *next_id;
 				*next_id = next_id.checked_add(1).ok_or(Error::<T>::KittiesIdOverflow)?;
@@ -102,13 +98,5 @@ decl_module! {
 }
 
 pub fn combine_dna(dna1: u8, dna2: u8, selector: u8) -> u8 {
-	// TODO: finish this implementation
-	// selector[bit_index] == 0 -> use dna1[bit_index]
-	// selector[bit_index] == 1 -> use dna2[bit_index]
-	// e.g.
-	// selector = 0b00000001
-	// dna1		= 0b10101010
-	// dna2		= 0b00001111
-	// result	= 0b10101011
 	0
 }
